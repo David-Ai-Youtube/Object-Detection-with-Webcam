@@ -48,15 +48,31 @@ def detect(filepath):
     scores = results[0]['scores'].detach().numpy()
     labels = results[0]['labels'].detach().numpy()
 
+
+    # Specify your desired font size
+    font_size = 20  # You can adjust this size according to your needs
+
+    # Create a font object
+    font = ImageFont.truetype("arial.ttf", font_size)  # Replace "arial.ttf" with the path to a font file if not using Arial
+
+
     # Further processing, such as drawing bounding boxes, filtering results, etc.
     # Example (you might need to adapt this part):
-
     draw = ImageDraw.Draw(image)
     for score, label, box in zip(scores, labels, results[0]['boxes']):
-        if score > 0.5:  # Threshold can be adjusted
-            box = [round(i.item()) for i in box]  # Convert tensor elements to integers
+        if score > 0.85:
+            box = [round(i.item()) for i in box]
             draw.rectangle(box, outline="red")
-            draw.text((box[0], box[1]), f'{model.config.id2label[label]}: {score:.2f}', fill="red")
+
+            label_text = f'{model.config.id2label[label]}: {score:.2f}'
+            x, y = box[0], box[1]
+
+            # Drawing outline
+            for adj in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                draw.text((x + adj[0], y + adj[1]), label_text, fill="black", font=font)
+
+            # Drawing main text
+            draw.text((x, y), label_text, fill="red", font=font)
 
 
     # Save or return the processed image
