@@ -1,6 +1,9 @@
 # Webcam Object Detection Flask App
 Webcam Object Detection Flask App
 
+![Example Detection](https://github.com/David-Ai-Youtube/Object-Detection-with-Webcam/blob/main/example.png?raw=true)
+
+
 A Flask-based web application for real-time object detection using a webcam. This app integrates a DETR (Detection Transformer) model from Facebook for efficient and accurate object detection in uploaded images. It provides a user-friendly interface where users can upload images, and the detected objects are highlighted and labeled directly in the browser. The app is built using Flask, PIL for image processing, and the transformers library for implementing the machine learning model.
 
 Webcam Object Detection Flask App
