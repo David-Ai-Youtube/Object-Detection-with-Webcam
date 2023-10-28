@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Object Detection with Webcam</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: stretch; /* Ensure items stretch to fill the container */
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .content {
+            flex: 1 1 300px;
+            max-width: calc(50% - 20px);
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white;
+            display: flex;
+            flex-direction: column; /* Arrange children vertically */
+            overflow: hidden; /* Hide any overflow */
+        }
+
+        video {
+            width: 100%; /* Full width */
+            height: auto; /* Auto height to maintain aspect ratio */
+            align-self: center; /* Center video in the container */
+        }
+
+        .image-container {
+            flex-grow: 1; /* Take available space */
+            display: flex;
+            justify-content: center; /* Center image horizontally */
+            align-items: center; /* Center image vertically */
+            padding: 0; /* No padding */
+        }
+
+        img {
+            width: 100%; /* Full width of the container */
+            height: auto; /* Auto height to maintain aspect ratio */
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        var stream;
+
+        function captureImage() {
+            var video = document.querySelector('video');
+            var canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas to data URL and send to the server
+            canvas.toBlob(function(blob) {
+                var formData = new FormData();
+                formData.append('file', blob, 'webcam.jpg');
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.json())
+                .then(data => {
+                    // Update the image source to display the processed image
+                    var processedImage = document.getElementById('result');
+                    processedImage.src = data.processedImage + '?t=' + new Date().getTime();
+                    processedImage.style.display = 'block'; // Make the image visible
+                });
+                
+            }, 'image/jpeg');
+        }
+
+        function startWebcam() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(s => {
+                    stream = s;
+                    var video = document.querySelector('video');
+                    video.srcObject = stream;
+                    video.play();
+                    toggleButtons(true);
+                });
+        }
+
+        function saveImage() {
+            var image = document.getElementById('result');
+            var link = document.createElement('a');
+            link.href = image.src; // Set the download URL to the image source
+            link.download = 'processed_image.jpg'; // Set the filename for the download
+            link.click(); // Trigger the download
+        }
+        
+        function stopWebcam() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                toggleButtons(false);
+            }
+        }
+
+        function toggleButtons(isStreaming) {
+            var startButton = document.getElementById('startButton');
+            var stopButton = document.getElementById('stopButton');
+            if (isStreaming) {
+                startButton.style.display = 'none';
+                stopButton.style.display = 'inline-block';
+            } else {
+                startButton.style.display = 'inline-block';
+                stopButton.style.display = 'none';
+            }
+        }
+
+        window.onload = function() {
+            startWebcam();  // Start webcam when page loads
+            toggleButtons(false);  // Initially, show only the start button
+        };
+
+    </script>
+</head>
+<body onload="startWebcam();">
+    <h1>Object Detection with Webcam</h1>
+    <div class="container">
+        <div class="content">
+            <video></video>
+            <div class="button-container">
+                <button id="stopButton" onclick="stopWebcam();" style="display:none; background-color: red;">Stop Webcam</button>
+                <button id="startButton" onclick="startWebcam();" style="display:none; background-color: green;">Start Webcam</button>
+                <button onclick="captureImage();">Capture Image</button>
+            </div>
+            
+        </div>
+        <div class="content">
+            <div class="image-container">
+                <img id="result" alt="Processed Image" style="display: none;">
+            </div>
+            <div class="button-container">
+                <button onclick="saveImage();">Save Image</button>
+            </div>   
+        </div>
+    </div>
+</body>
+
+</html>
